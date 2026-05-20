@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Video & Audio Downloader</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+        }
+        h2 { color: #333; margin-bottom: 5px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .options-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        select {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: white;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: #764ba2;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>All-in-One Downloader</h2>
+    <p>Download video or audio from any platform</p>
+    
+    <form id="downloadForm" action="/download" method="POST">
+        <input type="text" name="url" placeholder="Paste link here (YouTube, FB, Insta...)" required>
+        
+        <div class="options-group">
+            <select name="type" id="downloadType" onchange="toggleQuality()">
+                <option value="video">Video (MP4)</option>
+                <option value="audio">Audio (MP3)</option>
+            </select>
+            
+            <select name="quality" id="videoQuality">
+                <option value="best">Best Quality</option>
+                <option value="1080">1080p FHD</option>
+                <option value="720">720p HD</option>
+                <option value="480">480p SD</option>
+            </select>
+        </div>
+        
+        <button type="submit" id="submitBtn">Start Download</button>
+    </form>
+    
+    <div class="loading" id="loadingText">⏳ Processing... Please wait, downloading files takes time.</div>
+</div>
+
+<script>
+    // Agar user MP3 select kare to Quality option ko gayab kar de
+    function toggleQuality() {
+        const type = document.getElementById('downloadType').value;
+        const qualitySelect = document.getElementById('videoQuality');
+        if (type === 'audio') {
+            qualitySelect.style.display = 'none';
+        } else {
+            qualitySelect.style.display = 'block';
+        }
+    }
+
+    // Download click karne par loading screen dikhane ke liye
+    document.getElementById('downloadForm').onSubmit = function() {
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('loadingText').style.display = 'block';
+        
+        // Form submit hone ke kuch dair baad button ko reset karne ke liye
+        setTimeout(() => {
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('loadingText').style.display = 'none';
+        }, 10000);
+    };
+</script>
+
+</body>
+</html>
