@@ -1,12 +1,7 @@
-from flask import Flask, render_template, request, send_file, after_this_request
+from flask import Flask, render_template, request, Response
 import yt_dlp
-import os
 
 app = Flask(__name__)
-
-DOWNLOAD_FOLDER = 'downloads'
-if not os.path.exists(DOWNLOAD_FOLDER):
-    os.makedirs(DOWNLOAD_FOLDER)
 
 @app.route('/')
 def index():
@@ -16,62 +11,46 @@ def index():
 def download_video():
     video_url = request.form.get('url')
     download_type = request.form.get('type')  # 'video' or 'audio'
-    quality = request.form.get('quality')      # 'best', '1080', '720', '480'
     
     if not video_url:
         return "Please provide a valid URL", 400
 
-    # Base configuration
+    # Vercel Serverless ke liye full memory-streaming configuration (Bina save kiye download hoga)
     ydl_opts = {
-        'outtmpl': f'{DOWNLOAD_FOLDER}/%(title)s.%(ext)s',
+        'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
+        'outtmpl': '-',  # Yeh option file ko disk par save karne ke bajaye standard output (memory) mein bhejta hai
+        'logtostderr': True
     }
 
-    # Audio Settings
-    if download_type == 'audio':
-        ydl_opts.update({
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '192',
-            }],
-        })
-    # Video Settings based on quality
-    else:
-        if quality == '1080':
-            ydl_opts['format'] = 'bestvideo[height<=1080]+bestaudio/best'
-        elif quality == '720':
-            ydl_opts['format'] = 'bestvideo[height<=720]+bestaudio/best'
-        elif quality == '480':
-            ydl_opts['format'] = 'bestvideo[height<=480]+bestaudio/best'
-        else:
-            ydl_opts['format'] = 'bestvideo+bestaudio/best'
-
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=True)
-            file_path = ydl.prepare_filename(info_dict)
-            
-            # Agar audio download kiya hai to extension .mp3 ho chuki hogi
-            if download_type == 'audio':
-                file_path = os.path.splitext(file_path)[0] + '.mp3'
+        def generate():
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                # Video direct stream karne ke liye process create karna
+                info_dict = ydl.extract_info(video_url, download=False)
+                filename = ydl.prepare_filename(info_dict)
+                ext = 'mp3' if download_type == 'audio' else 'mp4'
+                clean_name = "".join([c for c in info_dict.get('title', 'video') if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+                
+                # Streaming header metadata setup
+                headers = {
+                    'Content-Disposition': f'attachment; filename="{clean_name}.{ext}"',
+                    'Content-Type': 'audio/mpeg' if download_type == 'audio' else 'video/mp4'
+                }
+                
+                # File stream generator ko return karna
+                with ydl.urlopen(info_dict['url']) as stream:
+                    while True:
+                        chunk = stream.read(1024 * 256)  # 256KB chunks mein download stream
+                        if not chunk:
+                            break
+                        yield chunk
 
-        # File send karne ke baad server se delete karne ka tareeqa
-        @after_this_request
-        def remove_file(response):
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as error:
-                app.logger.error(f"Error removing file: {error}")
-            return response
-
-        return send_file(file_path, as_attachment=True)
+        # Browser ko direct data block transfer karna bagair server crash kiye
+        ext = 'mp3' if download_type == 'audio' else 'mp4'
+        return Response(generate(), mimetype='audio/mpeg' if download_type == 'audio' else 'video/mp4', headers={'Content-Disposition': f'attachment; filename="download.{ext}"'})
 
     except Exception as e:
-        return f"Error: {str(e)}. (Make sure FFmpeg is installed for high-quality merges)", 500
+        return f"Vercel Streaming Error: {str(e)}", 500
 
-if __name__ == '__main__':
-    app.run(debug=True)
