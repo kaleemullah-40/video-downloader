@@ -15,42 +15,43 @@ def download_video():
     if not video_url:
         return "Please provide a valid URL", 400
 
-    # Vercel Serverless ke liye full memory-streaming configuration (Bina save kiye download hoga)
+    # YouTube Block Bypass Settings (Bina crash ke downloading chalegi)
     ydl_opts = {
         'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
-        'outtmpl': '-',  # Yeh option file ko disk par save karne ke bajaye standard output (memory) mein bhejta hai
-        'logtostderr': True
+        'outtmpl': '-',  # Direct stream data to memory
+        'logtostderr': True,
+        # ANTI-BAN HEADERS (YouTube block nahi karega)
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Sec-Fetch-Mode': 'navigate'
+        }
     }
 
     try:
         def generate():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # Video direct stream karne ke liye process create karna
                 info_dict = ydl.extract_info(video_url, download=False)
-                filename = ydl.prepare_filename(info_dict)
-                ext = 'mp3' if download_type == 'audio' else 'mp4'
+                
+                # Title clean karna file download name ke liye
                 clean_name = "".join([c for c in info_dict.get('title', 'video') if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+                ext = 'mp3' if download_type == 'audio' else 'mp4'
                 
-                # Streaming header metadata setup
-                headers = {
-                    'Content-Disposition': f'attachment; filename="{clean_name}.{ext}"',
-                    'Content-Type': 'audio/mpeg' if download_type == 'audio' else 'video/mp4'
-                }
-                
-                # File stream generator ko return karna
+                # Direct streaming from source URL chunks
                 with ydl.urlopen(info_dict['url']) as stream:
                     while True:
-                        chunk = stream.read(1024 * 256)  # 256KB chunks mein download stream
+                        chunk = stream.read(1024 * 512)  # 512KB fast download blocks
                         if not chunk:
                             break
                         yield chunk
 
-        # Browser ko direct data block transfer karna bagair server crash kiye
         ext = 'mp3' if download_type == 'audio' else 'mp4'
         return Response(generate(), mimetype='audio/mpeg' if download_type == 'audio' else 'video/mp4', headers={'Content-Disposition': f'attachment; filename="download.{ext}"'})
 
     except Exception as e:
-        return f"Vercel Streaming Error: {str(e)}", 500
+        return f"Download Failed: YouTube Security Blocked the Server. Details: {str(e)}", 500
 
+application = app
