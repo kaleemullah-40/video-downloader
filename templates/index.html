@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Video & Audio Downloader</title>
+    <title>Facebook & Instagram HD Video Downloader</title>
     
     <link rel="icon" type="image/png" href="https://flaticon.com">
 
@@ -89,11 +89,11 @@
 <body>
 
 <div class="container">
-    <h2>All-in-One Downloader</h2>
-    <p>Download video or audio from any platform</p>
+    <h2>FB & Insta Downloader</h2>
+    <p>Download Facebook Videos & Instagram Reels instantly</p>
     
     <form id="downloadForm">
-        <input type="text" id="videoUrl" name="url" placeholder="Paste link here (YouTube, FB, Insta...)" required>
+        <input type="text" id="videoUrl" name="url" placeholder="Paste Facebook or Instagram link here..." required>
         
         <div class="options-group">
             <select name="type" id="downloadType" onchange="toggleQuality()">
@@ -112,7 +112,7 @@
         <button type="submit" id="submitBtn">Start Download</button>
     </form>
     
-    <div class="loading" id="loadingText">⏳ Generating link... Please wait.</div>
+    <div class="loading" id="loadingText">⏳ Fetching video from server... Please wait.</div>
 </div>
 
 <!-- ADS SECTION -->
@@ -147,7 +147,6 @@
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
-        loadingText.innerText = "⏳ Fetching video link from server...";
 
         const formData = new FormData();
         formData.append('url', document.getElementById('videoUrl').value);
@@ -161,9 +160,8 @@
             const data = await response.json();
 
             if (data.success) {
-                loadingText.innerText = "📥 Downloading file directly to your system...";
+                loadingText.innerText = "📥 Downloading file directly...";
                 
-                // Force direct browser download bypass
                 const fileResponse = await fetch(data.download_url);
                 const fileBlob = await fileResponse.blob();
                 const blobUrl = URL.createObjectURL(fileBlob);
@@ -181,7 +179,7 @@
                 alert("Error: " + data.error);
             }
         } catch (err) {
-            alert("Error: Link generated but browser block policy stopped local saving. Try right-clicking the video if it opens in a new tab.");
+            alert("Error processing download. Please try a different video link.");
         } finally {
             submitBtn.disabled = false;
             setTimeout(() => { loadingText.style.display = 'none'; }, 4000);
