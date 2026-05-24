@@ -1,19 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="https://pl29529128.effectivecpmnetwork.com/e6/c7/15/e6c71556afa1e8bc01e29a4e926bb5db.js"></script>
-    <script>
-  atOptions = {
-    'key' : '856229b7cf3a8a0763762fd672697a84',
-    'format' : 'iframe',
-    'height' : 50,
-    'width' : 320,
-    'params' : {}
-  };
-</script>
-<script src="https://www.highperformanceformat.com/856229b7cf3a8a0763762fd672697a84/invoke.js"></script>
-
-    <meta name="google-site-verification" content="QTa9YeJ6JmLKKY3xQPAiOsR1SPIyNYVt4w7OxdxPOhE" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultimate Video & Audio Downloader</title>
@@ -105,8 +92,8 @@
     <h2>All-in-One Downloader</h2>
     <p>Download video or audio from any platform</p>
     
-    <form id="downloadForm" action="/download" method="POST">
-        <input type="text" name="url" placeholder="Paste link here (YouTube, FB, Insta...)" required>
+    <form id="downloadForm">
+        <input type="text" id="videoUrl" name="url" placeholder="Paste link here (YouTube, FB, Insta...)" required>
         
         <div class="options-group">
             <select name="type" id="downloadType" onchange="toggleQuality()">
@@ -125,10 +112,10 @@
         <button type="submit" id="submitBtn">Start Download</button>
     </form>
     
-    <div class="loading" id="loadingText">⏳ Processing... Please wait, downloading files takes time.</div>
+    <div class="loading" id="loadingText">⏳ Fetching Direct Download Link... Please wait.</div>
 </div>
 
-<!-- ADS SECTION (Aapka Code Yahan Setup Ho Chuka Hai) -->
+<!-- ADS SECTION -->
 <div class="ad-slot">
     <script type="text/javascript">
         atOptions = {
@@ -139,7 +126,7 @@
             'params' : {}
         };
     </script>
-    <script type="text/javascript" src="https://www.highperformanceformat.com/6de0dbcfdb8ab93ba582ef9c4de433e1/invoke.js"></script>
+    <script type="text/javascript" src="https://highperformanceformat.com"></script>
 </div>
 
 <script>
@@ -153,14 +140,47 @@
         }
     }
 
-    document.getElementById('downloadForm').onsubmit = function() {
-        document.getElementById('submitBtn').disabled = true;
-        document.getElementById('loadingText').style.display = 'block';
+    // Ajax-based browser downloading to fix 0-byte issue
+    document.getElementById('downloadForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingText = document.getElementById('loadingText');
         
-        setTimeout(() => {
-            document.getElementById('submitBtn').disabled = false;
-            document.getElementById('loadingText').style.display = 'none';
-        }, 15000);
+        submitBtn.disabled = true;
+        loadingText.style.display = 'block';
+        loadingText.innerText = "⏳ Generating link... Please wait.";
+
+        const formData = new FormData();
+        formData.append('url', document.getElementById('videoUrl').value);
+        formData.append('type', document.getElementById('downloadType').value);
+
+        try {
+            const response = await fetch('/download', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                loadingText.innerText = "🚀 Link generated! Download starting now...";
+                
+                // Browser trigger download block
+                const a = document.createElement('a');
+                a.href = data.download_url;
+                a.download = data.filename;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            alert("Connection error. Try again with a different link.");
+        } finally {
+            submitBtn.disabled = false;
+            setTimeout(() => { loadingText.style.display = 'none'; }, 3000);
+        }
     };
 </script>
 
