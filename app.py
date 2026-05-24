@@ -1,84 +1,193 @@
-from flask import Flask, render_template, request, jsonify
-import yt_dlp
-
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/download', methods=['POST'])
-def download_video():
-    video_url = request.form.get('url')
-    download_type = request.form.get('type')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Video & Audio Downloader</title>
     
-    if not video_url:
-        return jsonify({'error': 'Please provide a valid URL'}), 400
+    <link rel="icon" type="image/png" href="https://flaticon.com">
 
-    # Strongest 2026 Android & TV Client Emulation Bundle
-    ydl_opts = {
-        'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
-        'quiet': True,
-        'no_warnings': True,
-        'youtube_include_dash_manifest': False,
-        'youtube_include_hls_manifest': False,
-        'extractor_args': {
-            'youtube': {
-                # Android client server request signature verification bypass
-                'player_client': ['android', 'ios', 'tvhtml5'],
-                'skip': ['webpage', 'authcheck', 'hls', 'dash']
-            }
-        },
-        'http_headers': {
-            'User-Agent': 'com.google.android.youtube/19.05.36 (Linux; U; Android 14; en_US) admob/v240399999',
-            'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'X-YouTube-Client-Name': '3',  # Forces internal Android API gateway
-            'X-YouTube-Client-Version': '19.05.36'
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 20px;
+        }
+        h2 { color: #333; margin-bottom: 5px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .options-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        select {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: white;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+        .loading {
+            display: none;
+            margin-top: 15px;
+            color: #764ba2;
+            font-weight: bold;
+        }
+        .ad-slot {
+            width: 100%;
+            max-width: 728px;
+            min-height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>All-in-One Downloader</h2>
+    <p>Download video or audio from any platform</p>
+    
+    <form id="downloadForm">
+        <input type="text" id="videoUrl" name="url" placeholder="Paste link here (YouTube, FB, Insta...)" required>
+        
+        <div class="options-group">
+            <select name="type" id="downloadType" onchange="toggleQuality()">
+                <option value="video">Video (MP4)</option>
+                <option value="audio">Audio (MP3)</option>
+            </select>
+            
+            <select name="quality" id="videoQuality">
+                <option value="best">Best Quality</option>
+                <option value="1080">1080p FHD</option>
+                <option value="720">720p HD</option>
+                <option value="480">480p SD</option>
+            </select>
+        </div>
+        
+        <button type="submit" id="submitBtn">Start Download</button>
+    </form>
+    
+    <div class="loading" id="loadingText">⏳ Generating link... Please wait.</div>
+</div>
+
+<!-- ADS SECTION -->
+<div class="ad-slot">
+    <script type="text/javascript">
+        atOptions = {
+            'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+        };
+    </script>
+    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+</div>
+
+<script>
+    function toggleQuality() {
+        const type = document.getElementById('downloadType').value;
+        const qualitySelect = document.getElementById('videoQuality');
+        if (type === 'audio') {
+            qualitySelect.style.display = 'none';
+        } else {
+            qualitySelect.style.display = 'block';
         }
     }
 
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info_dict = ydl.extract_info(video_url, download=False)
-            direct_url = info_dict.get('url')
-            
-            # Format fallback lists parser
-            if not direct_url and 'formats' in info_dict:
-                valid_formats = [f for f in info_dict['formats'] if f.get('url') and f.get('vcodec') != 'none']
-                if not valid_formats:
-                    valid_formats = [f for f in info_dict['formats'] if f.get('url')]
-                if valid_formats:
-                    direct_url = valid_formats[-1]['url']
+    document.getElementById('downloadForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingText = document.getElementById('loadingText');
+        
+        submitBtn.disabled = true;
+        loadingText.style.display = 'block';
+        loadingText.innerText = "⏳ Fetching video link from server...";
 
-            if not direct_url:
-                return jsonify({'error': 'YouTube extraction failed on this server IP. Please use Facebook or Instagram links.'}), 500
+        const formData = new FormData();
+        formData.append('url', document.getElementById('videoUrl').value);
+        formData.append('type', document.getElementById('downloadType').value);
 
-            title = "".join([c for c in info_dict.get('title', 'video') if c.isalpha() or c.isdigit() or c==' ']).rstrip()
-            ext = 'mp3' if download_type == 'audio' else 'mp4'
-            
-            return jsonify({
-                'success': True,
-                'download_url': direct_url,
-                'filename': f"{title}.{ext}"
-            })
+        try {
+            const response = await fetch('/download', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
 
-    except Exception as e:
-        # Emergency Fallback for Non-YouTube links (Facebook, TikTok, Insta always work 100%)
-        try:
-            fallback_opts = {'quiet': True, 'no_warnings': True}
-            with yt_dlp.YoutubeDL(fallback_opts) as ydl_fb:
-                info_fb = ydl_fb.extract_info(video_url, download=False)
-                fb_url = info_fb.get('url') or info_fb['formats'][-1]['url']
-                if fb_url:
-                    return jsonify({
-                        'success': True,
-                        'download_url': fb_url,
-                        'filename': "download.mp4"
-                    })
-        except:
-            pass
-            
-        return jsonify({'error': f"YouTube request blocked by server location. Instagram and Facebook links work perfectly on this network."}), 500
+            if (data.success) {
+                loadingText.innerText = "📥 Downloading file directly to your system...";
+                
+                // Force direct browser download bypass
+                const fileResponse = await fetch(data.download_url);
+                const fileBlob = await fileResponse.blob();
+                const blobUrl = URL.createObjectURL(fileBlob);
+                
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = data.filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(blobUrl);
+                
+                loadingText.innerText = "✅ Download Complete!";
+            } else {
+                alert("Error: " + data.error);
+            }
+        } catch (err) {
+            alert("Error: Link generated but browser block policy stopped local saving. Try right-clicking the video if it opens in a new tab.");
+        } finally {
+            submitBtn.disabled = false;
+            setTimeout(() => { loadingText.style.display = 'none'; }, 4000);
+        }
+    };
+</script>
 
-application = app
+</body>
+</html>
