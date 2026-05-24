@@ -15,29 +15,44 @@ def download_video():
     if not video_url:
         return jsonify({'error': 'Please provide a valid URL'}), 400
 
-    # Mobile App client emulation to bypass the "Sign in to confirm you're not a bot" block
+    # Ultimate 2026 YouTube Bot-Block Bypass Configuration
     ydl_opts = {
-        # 'ios' aur 'android' extractor use karne se bot block bypass ho jata hai
         'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
+        # Yeh option direct player stream uthata hai aur main page bot verification bypass karta hai
+        'youtube_include_dash_manifest': False,
+        'youtube_include_hls_manifest': False,
         'extractor_args': {
             'youtube': {
-                'player_client': ['ios', 'android'],
-                'skip': ['webpage']
+                'player_client': ['web', 'mweb'],
+                'skip': ['dash', 'hls']
             }
         },
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36',
             'Accept': '*/*',
-            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Origin': 'https://www.youtube.com',
+            'Referer': 'https://www.youtube.com/'
         }
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(video_url, download=False)
+            
+            # Agar format links list mein ho to direct url nikalna
             direct_url = info_dict.get('url')
+            if not direct_url and 'formats' in info_dict:
+                # Best quality format filter out karna
+                valid_formats = [f for f in info_dict['formats'] if f.get('url')]
+                if valid_formats:
+                    direct_url = valid_formats[-1]['url']
+
+            if not direct_url:
+                return jsonify({'error': 'Could not extract direct stream URL. Try another video link.'}), 500
+
             title = "".join([c for c in info_dict.get('title', 'video') if c.isalpha() or c.isdigit() or c==' ']).rstrip()
             ext = 'mp3' if download_type == 'audio' else 'mp4'
             
@@ -48,7 +63,17 @@ def download_video():
             })
 
     except Exception as e:
-        # Agar phir bhi issue aaye to extract_flat try karein ga error return karne ke bajaye
-        return jsonify({'error': f"YouTube Blocked Request. Error: {str(e)}"}), 500
+        # Fallback Mechanism: Agar main download fail ho to simple extractor try karein
+        try:
+            fallback_opts = {'quiet': True, 'skip_download': True, 'format': 'best'}
+            with yt_dlp.YoutubeDL(fallback_opts) as ydl_fb:
+                info_fb = ydl_fb.extract_info(video_url, download=False)
+                return jsonify({
+                    'success': True,
+                    'download_url': info_fb.get('url') or info_fb['formats'][0]['url'],
+                    'filename': "video.mp4"
+                })
+        except Exception as fallback_error:
+            return jsonify({'error': f"YouTube Security Blocked Vercel Server. Details: {str(fallback_error)}"}), 500
 
 application = app
