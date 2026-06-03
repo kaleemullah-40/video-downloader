@@ -1,31 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facebook & Instagram HD Video Downloader</title>
-    
     <link rel="icon" type="image/png" href="https://flaticon.com">
 
     <style>
         body {
-                <script>
-  atOptions = {
-    'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
-    'format' : 'iframe',
-    'height' : 90,
-    'width' : 728,
-    'params' : {}
-  };
-            <script>
-  atOptions = {
-    'key' : '856229b7cf3a8a0763762fd672697a84',
-    'format' : 'iframe',
-    'height' : 50,
-    'width' : 320,
-    'params' : {}
-  };   
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
@@ -91,7 +73,7 @@
             color: #764ba2;
             font-weight: bold;
         }
-        .ad-slot {
+        .ad-slot-large {
             width: 100%;
             max-width: 728px;
             min-height: 90px;
@@ -99,7 +81,15 @@
             justify-content: center;
             align-items: center;
             margin-top: 20px;
-            border-radius: 8px;
+        }
+        .ad-slot-small {
+            width: 100%;
+            max-width: 320px;
+            min-height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -132,8 +122,8 @@
     <div class="loading" id="loadingText">⏳ Fetching video from server... Please wait.</div>
 </div>
 
-<!-- ADS SECTION -->
-<div class="ad-slot">
+<!-- 1. بڑا اشتہار (728x90) مڈل/بوٹم کے لیے -->
+<div class="ad-slot-large">
     <script type="text/javascript">
         atOptions = {
             'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
@@ -145,6 +135,23 @@
     </script>
     <script type="text/javascript" src="https://highperformanceformat.com"></script>
 </div>
+
+<!-- 2. چھوٹا اشتہار (320x50) موبائل کے لیے -->
+<div class="ad-slot-small">
+    <script type="text/items">
+        atOptions = {
+            'key' : '856229b7cf3a8a0763762fd672697a84',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+        };
+    </script>
+    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+</div>
+
+<!-- پاپ انڈر/بیک گراؤنڈ ایڈ اسکرپٹ -->
+<script src="https://effectivecpmnetwork.com"></script>
 
 <script>
     function toggleQuality() {
@@ -202,18 +209,7 @@
             setTimeout(() => { loadingText.style.display = 'none'; }, 4000);
         }
     };
-<script>
-  atOptions = {
-    'key' : '856229b7cf3a8a0763762fd672697a84',
-    'format' : 'iframe',
-    'height' : 50,
-    'width' : 320,
-    'params' : {}
-  };
 </script>
-<script src="https://www.highperformanceformat.com/856229b7cf3a8a0763762fd672697a84/invoke.js"></script>
-<script src="https://www.highperformanceformat.com/6de0dbcfdb8ab93ba582ef9c4de433e1/invoke.js"></script>
 
-<script src="https://pl29529128.effectivecpmnetwork.com/e6/c7/15/e6c71556afa1e8bc01e29a4e926bb5db.js"></script>
 </body>
 </html>
