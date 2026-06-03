@@ -1,5 +1,14 @@
 from flask import Flask, render_template, request, jsonify
 import yt_dlp
+import subprocess
+import sys
+
+# Server start hote hi yt-dlp ko update karega
+try:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp"])
+except Exception as e:
+    print(f"Update failed: {e}")
+    
 
 app = Flask(__name__)
 
