@@ -1,31 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facebook & Instagram HD Video Downloader</title>
-    
     <link rel="icon" type="image/png" href="https://flaticon.com">
 
     <style>
         body {
-                <script>
-  atOptions = {
-    'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
-    'format' : 'iframe',
-    'height' : 90,
-    'width' : 728,
-    'params' : {}
-  };
-            <script>
-  atOptions = {
-    'key' : '856229b7cf3a8a0763762fd672697a84',
-    'format' : 'iframe',
-    'height' : 50,
-    'width' : 320,
-    'params' : {}
-  };   
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
@@ -105,6 +87,20 @@
 </head>
 <body>
 
+<!-- TOP AD SLOT 320x50 (for mobile) -->
+<div style="margin-bottom: 15px;">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '856229b7cf3a8a0763762fd672697a84',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="https://www.highperformanceformat.com/856229b7cf3a8a0763762fd672697a84/invoke.js"></script>
+</div>
+
 <div class="container">
     <h2>FB & Insta Downloader</h2>
     <p>Download Facebook Videos & Instagram Reels instantly</p>
@@ -132,7 +128,7 @@
     <div class="loading" id="loadingText">⏳ Fetching video from server... Please wait.</div>
 </div>
 
-<!-- ADS SECTION -->
+<!-- BOTTOM AD SLOT 728x90 -->
 <div class="ad-slot">
     <script type="text/javascript">
         atOptions = {
@@ -143,7 +139,7 @@
             'params' : {}
         };
     </script>
-    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+    <script type="text/javascript" src="https://www.highperformanceformat.com/6de0dbcfdb8ab93ba582ef9c4de433e1/invoke.js"></script>
 </div>
 
 <script>
@@ -158,12 +154,14 @@
     }
 
     document.getElementById('downloadForm').onsubmit = async function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Page reload rokay ga
+        
         const submitBtn = document.getElementById('submitBtn');
         const loadingText = document.getElementById('loadingText');
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
+        loadingText.innerText = "⏳ Fetching video from server... Please wait.";
 
         const formData = new FormData();
         formData.append('url', document.getElementById('videoUrl').value);
@@ -177,43 +175,29 @@
             const data = await response.json();
 
             if (data.success) {
-                loadingText.innerText = "📥 Downloading file directly...";
+                loadingText.innerText = "✅ Link Found! Opening download tab...";
                 
-                const fileResponse = await fetch(data.download_url);
-                const fileBlob = await fileResponse.blob();
-                const blobUrl = URL.createObjectURL(fileBlob);
+                // FIXED: Direct window.open use kia taake CORS ka error na aaye aur video download ho jaye
+                window.open(data.download_url, '_blank');
                 
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = data.filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(blobUrl);
-                
-                loadingText.innerText = "✅ Download Complete!";
+                loadingText.innerText = "✅ Download Started in New Tab!";
             } else {
                 alert("Error: " + data.error);
+                loadingText.style.display = 'none';
             }
         } catch (err) {
             alert("Error processing download. Please try a different video link.");
+            loadingText.style.display = 'none';
         } finally {
             submitBtn.disabled = false;
             setTimeout(() => { loadingText.style.display = 'none'; }, 4000);
         }
     };
-<script>
-  atOptions = {
-    'key' : '856229b7cf3a8a0763762fd672697a84',
-    'format' : 'iframe',
-    'height' : 50,
-    'width' : 320,
-    'params' : {}
-  };
 </script>
-<script src="https://www.highperformanceformat.com/856229b7cf3a8a0763762fd672697a84/invoke.js"></script>
-<script src="https://www.highperformanceformat.com/6de0dbcfdb8ab93ba582ef9c4de433e1/invoke.js"></script>
 
+<!-- Extra Ad Network Scripts -->
 <script src="https://pl29529128.effectivecpmnetwork.com/e6/c7/15/e6c71556afa1e8bc01e29a4e926bb5db.js"></script>
+
 </body>
-</html>
+    </html>
+    
