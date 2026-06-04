@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import yt_dlp
+import os
+import urllib.request
 
 app = Flask(__name__)
 
@@ -19,13 +21,14 @@ def download_video():
         'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
-        'extractor_args': {
-            'youtube': {'player_client': ['android', 'ios']},
-        },
         'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         }
     }
+
+    # Automatically loads cookies if the file exists in folder
+    if os.path.exists('cookies.txt'):
+        ydl_opts['cookiefile'] = 'cookies.txt'
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -40,18 +43,46 @@ def download_video():
                     direct_url = valid_formats[-1]['url']
 
             if not direct_url:
-                return jsonify({'error': 'Media link parsing failed. Platform security restriction.'}), 500
+                return jsonify({'error': 'Platform block! Layout parameters changed or cookies out of sync.'}), 500
 
             title = "".join([c for c in info_dict.get('title', 'video') if c.isalnum() or c==' ']).rstrip()
             ext = 'mp3' if download_type == 'audio' else 'mp4'
+            filename = f"{title}.{ext}"
             
+            # Send custom local stream route instead of structural raw link
             return jsonify({
                 'success': True,
-                'download_url': direct_url,
-                'filename': f"{title}.{ext}"
+                'stream_url': f"/stream_file?url={urllib.parse.quote(direct_url)}&filename={urllib.parse.quote(filename)}"
             })
 
     except Exception as e:
-        return jsonify({'error': f"Platform Error: {str(e)}"}), 500
+        return jsonify({'error': f"Platform Update Error: {str(e)}"}), 500
+
+# SECURE CHUNK SYSTEM: Fixes the 'Unable to play' bug across all platforms
+@app.route('/stream_file')
+def stream_file():
+    target_url = request.args.get('url')
+    filename = request.args.get('filename', 'video.mp4')
+    
+    req = urllib.request.Request(
+        target_url, 
+        headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
+    )
+    
+    def generate():
+        with urllib.request.urlopen(req) as response:
+            while True:
+                chunk = response.read(1024 * 256) # 256KB Chunks
+                if not chunk:
+                    break
+                yield chunk
+                
+    return Response(
+        generate(),
+        headers={
+            'Content-Disposition': f'attachment; filename="{filename}"',
+            'Content-Type': 'video/mp4' if filename.endswith('.mp4') else 'audio/mpeg'
+        }
+    )
 
 application = app
