@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Facebook & Instagram HD Video Downloader</title>
-    <link rel="icon" type="image/png" href="https://flaticon.com">
-
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,7 +25,6 @@
             text-align: center;
             width: 100%;
             max-width: 450px;
-            margin-bottom: 20px;
         }
         h2 { color: #333; margin-bottom: 5px; }
         p { color: #666; font-size: 14px; margin-bottom: 25px; }
@@ -73,33 +70,9 @@
             color: #764ba2;
             font-weight: bold;
         }
-        .ad-slot {
-            width: 100%;
-            max-width: 728px;
-            min-height: 90px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            border-radius: 8px;
-        }
     </style>
 </head>
 <body>
-
-<!-- TOP AD SLOT 320x50 (Optimized for Mobile) -->
-<div style="margin-bottom: 15px; width: 100%; max-width: 320px; text-align: center;">
-    <script type="text/javascript">
-      atOptions = {
-        'key' : '856229b7cf3a8a0763762fd672697a84',
-        'format' : 'iframe',
-        'height' : 50,
-        'width' : 320,
-        'params' : {}
-      };
-    </script>
-    <script type="text/javascript" src="https://highperformanceformat.com"></script>
-</div>
 
 <div class="container">
     <h2>FB & Insta Downloader</h2>
@@ -116,59 +89,44 @@
             
             <select name="quality" id="videoQuality">
                 <option value="best">Best Quality</option>
-                <option value="1080">1080p FHD</option>
-                <option value="720">720p HD</option>
-                <option value="480">480p SD</option>
             </select>
         </div>
         
         <button type="submit" id="submitBtn">Start Download</button>
     </form>
     
-    <div class="loading" id="loadingText">⏳ Fetching video from server... Please wait.</div>
-</div>
-
-<!-- BOTTOM AD SLOT 728x90 -->
-<div class="ad-slot">
-    <script type="text/javascript">
-        atOptions = {
-            'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
-            'format' : 'iframe',
-            'height' : 90,
-            'width' : 728,
-            'params' : {}
-        };
-    </script>
-    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+    <div class="loading" id="loadingText">⏳ Fetching video link... Please wait.</div>
+    <div id="downloadArea" style="margin-top: 20px; display: none;">
+        <p style="color: green; font-weight: bold;">Link Found Successfully!</p>
+        <a id="realDownloadLink" rel="noreferrer" style="display: inline-block; background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">👉 Click Here to Save Video</a>
+        <p style="font-size: 11px; color: #888; margin-top: 10px;">Note: If video plays instead of downloading, tap the 3 dots (⋮) on video player and click Download.</p>
+    </div>
 </div>
 
 <script>
     function toggleQuality() {
         const type = document.getElementById('downloadType').value;
         const qualitySelect = document.getElementById('videoQuality');
-        if (type === 'audio') {
-            qualitySelect.style.display = 'none';
-        } else {
-            qualitySelect.style.display = 'block';
-        }
+        qualitySelect.style.display = (type === 'audio') ? 'none' : 'block';
     }
 
     document.getElementById('downloadForm').onsubmit = async function(e) {
-        e.preventDefault(); // Form ka default reload rokay ga
+        e.preventDefault();
         
         const submitBtn = document.getElementById('submitBtn');
         const loadingText = document.getElementById('loadingText');
+        const downloadArea = document.getElementById('downloadArea');
+        const realDownloadLink = document.getElementById('realDownloadLink');
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
-        loadingText.innerText = "⏳ Connecting to secure proxy server... Please wait.";
+        downloadArea.style.display = 'none';
 
         const formData = new FormData();
         formData.append('url', document.getElementById('videoUrl').value);
         formData.append('type', document.getElementById('downloadType').value);
 
         try {
-            // Python Backend ko request bhejna
             const response = await fetch('/download', {
                 method: 'POST',
                 body: formData
@@ -176,28 +134,24 @@
             const data = await response.json();
 
             if (data.success) {
-                loadingText.innerText = "📥 Video Found! Downloading file to your mobile folder...";
+                loadingText.style.display = 'none';
+                downloadArea.style.display = 'block';
                 
-                // Proxy URL par direct page ko redirect karna taake browser file force-download kare
-                window.location.href = data.proxy_url;
-                
-                loadingText.innerText = "✅ Download Started! Check your mobile storage.";
+                // Set the real uncorrupted direct link to button
+                realDownloadLink.href = data.download_url;
+                realDownloadLink.setAttribute('download', data.filename);
             } else {
-                alert("Server Response: " + data.error);
+                alert("Error: " + data.error);
                 loadingText.style.display = 'none';
             }
         } catch (err) {
-            alert("Network Error: Cloud platform may have temporarily blocked this request. Try again later.");
+            alert("Connection Error. Please check your link or try again.");
             loadingText.style.display = 'none';
         } finally {
             submitBtn.disabled = false;
-            setTimeout(() => { loadingText.style.display = 'none'; }, 5000);
         }
     };
 </script>
-
-<!-- Extra Ad Network Popunder / Native Scripts -->
-<script src="https://effectivecpmnetwork.com"></script>
 
 </body>
 </html>
