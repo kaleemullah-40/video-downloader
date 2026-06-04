@@ -121,11 +121,6 @@
     </form>
     
     <div class="loading" id="loadingText">⏳ Fetching video link... Please wait.</div>
-    
-    <div id="downloadArea" style="margin-top: 20px; display: none;">
-        <p style="color: green; font-weight: bold;">Video Link Processed!</p>
-        <button id="directDownloadTrigger" style="background: #28a745; background-image: none; width: auto; padding: 12px 30px;">📥 Save Video To Device</button>
-    </div>
 </div>
 
 <!-- BOTTOM ADS (728x90) -->
@@ -142,21 +137,16 @@
     <script type="text/javascript" src="https://highperformanceformat.com"></script>
 </div>
 
-<!-- JAVASCRIPT MECHANISM -->
 <script>
-    let globalDownloadUrl = "";
-    let globalFilename = "video.mp4";
-
     document.getElementById('downloadForm').onsubmit = async function(e) {
         e.preventDefault();
         
         const submitBtn = document.getElementById('submitBtn');
         const loadingText = document.getElementById('loadingText');
-        const downloadArea = document.getElementById('downloadArea');
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
-        downloadArea.style.display = 'none';
+        loadingText.innerText = "⏳ Processing streams directly... Please wait.";
 
         const formData = new FormData();
         formData.append('url', document.getElementById('videoUrl').value);
@@ -170,53 +160,22 @@
             const data = await response.json();
 
             if (data.success) {
-                loadingText.style.display = 'none';
-                downloadArea.style.display = 'block';
-                
-                // Saving data locally to trigger on click safely without expiration
-                globalDownloadUrl = data.download_url;
-                globalFilename = data.filename;
+                loadingText.innerText = "📥 Saving full file data to your device storage...";
+                // Redirects directly to the uncorrupted secure backend generator stream
+                window.location.href = data.stream_url;
             } else {
                 alert("Error: " + data.error);
-                loadingText.style.display = 'none';
             }
         } catch (err) {
-            alert("Platform error or IP restriction. Try another link.");
-            loadingText.style.display = 'none';
+            alert("Network timeout or strict restriction. Please try again.");
         } finally {
             submitBtn.disabled = false;
-        }
-    };
-
-    // Trigger force download directly in computer or mobile browser memory
-    document.getElementById('directDownloadTrigger').onclick = async function() {
-        this.innerText = "⏳ Saving file...";
-        this.disabled = true;
-        try {
-            const res = await fetch(globalDownloadUrl);
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = blobUrl;
-            a.download = globalFilename;
-            document.body.appendChild(a);
-            a.click();
-            
-            document.body.removeChild(a);
-            URL.revokeObjectURL(blobUrl);
-            this.innerText = "📥 Save Video To Device";
-        } catch(e) {
-            // Fallback strategy if blob fails on computer
-            window.open(globalDownloadUrl, '_blank');
-            this.innerText = "📥 Save Video To Device";
-        } finally {
-            this.disabled = false;
+            setTimeout(() => { loadingText.style.display = 'none'; }, 6000);
         }
     };
 </script>
 
-<!-- Popunder & Native Ads Script -->
+<!-- Popunder & Native Auto Ads -->
 <script src="https://effectivecpmnetwork.com"></script>
 
 </body>
