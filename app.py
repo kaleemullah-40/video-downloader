@@ -1,6 +1,5 @@
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify
 import yt_dlp
-import requests
 
 app = Flask(__name__)
 
@@ -20,6 +19,12 @@ def download_video():
         'format': 'bestaudio/best' if download_type == 'audio' else 'best[ext=mp4]/best',
         'quiet': True,
         'no_warnings': True,
+        'extractor_args': {
+            'youtube': {'player_client': ['android', 'ios']},
+        },
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+        }
     }
 
     try:
@@ -35,35 +40,18 @@ def download_video():
                     direct_url = valid_formats[-1]['url']
 
             if not direct_url:
-                return jsonify({'error': 'Platform block! Link parse nahi ho saka.'}), 500
+                return jsonify({'error': 'Media link parsing failed. Platform security restriction.'}), 500
 
             title = "".join([c for c in info_dict.get('title', 'video') if c.isalnum() or c==' ']).rstrip()
             ext = 'mp3' if download_type == 'audio' else 'mp4'
-            filename = f"{title}.{ext}"
             
-            # YAHAN SE PROXY TRIGGER HOGI: Direct frontend ko bhej rahe hain custom route par
             return jsonify({
                 'success': True,
-                'proxy_url': f"/stream?url={direct_url}&filename={filename}"
+                'download_url': direct_url,
+                'filename': f"{title}.{ext}"
             })
 
     except Exception as e:
-        return jsonify({'error': f"Server Throttled: {str(e)}"}), 500
-
-# NAYA ROUTE: Jo video ko download karwayega mobile me direct play nahi hone dega
-@app.route('/stream')
-def stream_video():
-    video_url = request.args.get('url')
-    filename = request.args.get('filename', 'video.mp4')
-    
-    req = requests.get(video_url, stream=True)
-    
-    # Headers jo mobile browser ko force karenge file save karne par
-    headers = {
-        'Content-Disposition': f'attachment; filename="{filename}"',
-        'Content-Type': req.headers.get('Content-Type', 'video/mp4')
-    }
-    
-    return Response(req.iter_content(chunk_size=1024*1024), headers=headers)
+        return jsonify({'error': f"Platform Error: {str(e)}"}), 500
 
 application = app
