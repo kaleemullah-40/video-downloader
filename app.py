@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, Response
 import yt_dlp
 import os
 import urllib.request
+import urllib.parse
 
 app = Flask(__name__)
 
@@ -26,9 +27,10 @@ def download_video():
         }
     }
 
-    # Automatically loads cookies if the file exists in folder
+    # FIX: Automatically loads cookies and disables file locking for Vercel's read-only file system
     if os.path.exists('cookies.txt'):
         ydl_opts['cookiefile'] = 'cookies.txt'
+        ydl_opts['cookiefile_lock'] = False  # <--- Yeh line read-only error ko theek karegi
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
