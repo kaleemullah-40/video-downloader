@@ -85,7 +85,7 @@
 </head>
 <body>
 
-<!-- TOP ADS (320x50) -->
+<!-- TOP ADS SLOT (320x50 Optimized for Mobile Devices) -->
 <div style="margin-bottom: 15px; width: 100%; max-width: 320px; text-align: center;">
     <script type="text/javascript">
       atOptions = {
@@ -123,7 +123,7 @@
     <div class="loading" id="loadingText">⏳ Fetching video link... Please wait.</div>
 </div>
 
-<!-- BOTTOM ADS (728x90) -->
+<!-- BOTTOM ADS SLOT (728x90 Banner for Desktop users) -->
 <div class="ad-slot">
     <script type="text/javascript">
         atOptions = {
@@ -139,14 +139,14 @@
 
 <script>
     document.getElementById('downloadForm').onsubmit = async function(e) {
-        e.preventDefault();
+        e.preventDefault(); // Prevents layout flashing and default form behavior
         
         const submitBtn = document.getElementById('submitBtn');
         const loadingText = document.getElementById('loadingText');
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
-        loadingText.innerText = "⏳ Processing streams directly... Please wait.";
+        loadingText.innerText = "⏳ Processing safe cloud streams... Please wait.";
 
         const formData = new FormData();
         formData.append('url', document.getElementById('videoUrl').value);
@@ -160,14 +160,14 @@
             const data = await response.json();
 
             if (data.success) {
-                loadingText.innerText = "📥 Saving full file data to your device storage...";
-                // Redirects directly to the uncorrupted secure backend generator stream
+                loadingText.innerText = "📥 Connection secured! Initializing download chunk stream...";
+                // Triggers structural data streaming via in-memory secure backend handler
                 window.location.href = data.stream_url;
             } else {
                 alert("Error: " + data.error);
             }
         } catch (err) {
-            alert("Network timeout or strict restriction. Please try again.");
+            alert("Network handshake timed out. Platform token expired. Please try again.");
         } finally {
             submitBtn.disabled = false;
             setTimeout(() => { loadingText.style.display = 'none'; }, 6000);
@@ -175,7 +175,7 @@
     };
 </script>
 
-<!-- Popunder & Native Auto Ads -->
+<!-- AUTO ADS INJECTION (Popunder, Direct Links and Native Smart Overlays) -->
 <script src="https://effectivecpmnetwork.com"></script>
 
 </body>
