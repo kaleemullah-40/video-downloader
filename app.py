@@ -3,6 +3,7 @@ import yt_dlp
 import os
 import urllib.request
 import urllib.parse
+import io
 
 app = Flask(__name__)
 
@@ -27,10 +28,18 @@ def download_video():
         }
     }
 
-    # FIX: Automatically loads cookies and disables file locking for Vercel's read-only file system
+    # SOLUTION: Instead of passing a file, we load cookies as an in-memory string object
     if os.path.exists('cookies.txt'):
-        ydl_opts['cookiefile'] = 'cookies.txt'
-        ydl_opts['cookiefile_lock'] = False  # <--- Yeh line read-only error ko theek karegi
+        try:
+            with open('cookies.txt', 'r', encoding='utf-8') as f:
+                cookie_content = f.read()
+            
+            # String stream loads without touching Vercel's read-only hard drive
+            cookie_stream = io.StringIO(cookie_content)
+            ydl_opts['cookiefile'] = cookie_stream
+            ydl_opts['cookiefile_lock'] = False
+        except Exception:
+            pass # Fallback if file read fails
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -51,7 +60,6 @@ def download_video():
             ext = 'mp3' if download_type == 'audio' else 'mp4'
             filename = f"{title}.{ext}"
             
-            # Send custom local stream route instead of structural raw link
             return jsonify({
                 'success': True,
                 'stream_url': f"/stream_file?url={urllib.parse.quote(direct_url)}&filename={urllib.parse.quote(filename)}"
@@ -60,7 +68,7 @@ def download_video():
     except Exception as e:
         return jsonify({'error': f"Platform Update Error: {str(e)}"}), 500
 
-# SECURE CHUNK SYSTEM: Fixes the 'Unable to play' bug across all platforms
+# SECURE IN-MEMORY STREAM SYSTEM
 @app.route('/stream_file')
 def stream_file():
     target_url = request.args.get('url')
