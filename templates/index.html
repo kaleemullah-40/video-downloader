@@ -25,6 +25,7 @@
             text-align: center;
             width: 100%;
             max-width: 450px;
+            margin-bottom: 20px;
         }
         h2 { color: #333; margin-bottom: 5px; }
         p { color: #666; font-size: 14px; margin-bottom: 25px; }
@@ -70,9 +71,33 @@
             color: #764ba2;
             font-weight: bold;
         }
+        .ad-slot {
+            width: 100%;
+            max-width: 728px;
+            min-height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
+
+<!-- TOP ADS (320x50) -->
+<div style="margin-bottom: 15px; width: 100%; max-width: 320px; text-align: center;">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '856229b7cf3a8a0763762fd672697a84',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+</div>
 
 <div class="container">
     <h2>FB & Insta Downloader</h2>
@@ -82,7 +107,7 @@
         <input type="text" id="videoUrl" name="url" placeholder="Paste Facebook or Instagram link here..." required>
         
         <div class="options-group">
-            <select name="type" id="downloadType" onchange="toggleQuality()">
+            <select name="type" id="downloadType">
                 <option value="video">Video (MP4)</option>
                 <option value="audio">Audio (MP3)</option>
             </select>
@@ -96,19 +121,31 @@
     </form>
     
     <div class="loading" id="loadingText">⏳ Fetching video link... Please wait.</div>
+    
     <div id="downloadArea" style="margin-top: 20px; display: none;">
-        <p style="color: green; font-weight: bold;">Link Found Successfully!</p>
-        <a id="realDownloadLink" rel="noreferrer" style="display: inline-block; background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold;">👉 Click Here to Save Video</a>
-        <p style="font-size: 11px; color: #888; margin-top: 10px;">Note: If video plays instead of downloading, tap the 3 dots (⋮) on video player and click Download.</p>
+        <p style="color: green; font-weight: bold;">Video Link Processed!</p>
+        <button id="directDownloadTrigger" style="background: #28a745; background-image: none; width: auto; padding: 12px 30px;">📥 Save Video To Device</button>
     </div>
 </div>
 
+<!-- BOTTOM ADS (728x90) -->
+<div class="ad-slot">
+    <script type="text/javascript">
+        atOptions = {
+            'key' : '6de0dbcfdb8ab93ba582ef9c4de433e1',
+            'format' : 'iframe',
+            'height' : 90,
+            'width' : 728,
+            'params' : {}
+        };
+    </script>
+    <script type="text/javascript" src="https://highperformanceformat.com"></script>
+</div>
+
+<!-- JAVASCRIPT MECHANISM -->
 <script>
-    function toggleQuality() {
-        const type = document.getElementById('downloadType').value;
-        const qualitySelect = document.getElementById('videoQuality');
-        qualitySelect.style.display = (type === 'audio') ? 'none' : 'block';
-    }
+    let globalDownloadUrl = "";
+    let globalFilename = "video.mp4";
 
     document.getElementById('downloadForm').onsubmit = async function(e) {
         e.preventDefault();
@@ -116,7 +153,6 @@
         const submitBtn = document.getElementById('submitBtn');
         const loadingText = document.getElementById('loadingText');
         const downloadArea = document.getElementById('downloadArea');
-        const realDownloadLink = document.getElementById('realDownloadLink');
         
         submitBtn.disabled = true;
         loadingText.style.display = 'block';
@@ -137,21 +173,51 @@
                 loadingText.style.display = 'none';
                 downloadArea.style.display = 'block';
                 
-                // Set the real uncorrupted direct link to button
-                realDownloadLink.href = data.download_url;
-                realDownloadLink.setAttribute('download', data.filename);
+                // Saving data locally to trigger on click safely without expiration
+                globalDownloadUrl = data.download_url;
+                globalFilename = data.filename;
             } else {
                 alert("Error: " + data.error);
                 loadingText.style.display = 'none';
             }
         } catch (err) {
-            alert("Connection Error. Please check your link or try again.");
+            alert("Platform error or IP restriction. Try another link.");
             loadingText.style.display = 'none';
         } finally {
             submitBtn.disabled = false;
         }
     };
+
+    // Trigger force download directly in computer or mobile browser memory
+    document.getElementById('directDownloadTrigger').onclick = async function() {
+        this.innerText = "⏳ Saving file...";
+        this.disabled = true;
+        try {
+            const res = await fetch(globalDownloadUrl);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = globalFilename;
+            document.body.appendChild(a);
+            a.click();
+            
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+            this.innerText = "📥 Save Video To Device";
+        } catch(e) {
+            // Fallback strategy if blob fails on computer
+            window.open(globalDownloadUrl, '_blank');
+            this.innerText = "📥 Save Video To Device";
+        } finally {
+            this.disabled = false;
+        }
+    };
 </script>
+
+<!-- Popunder & Native Ads Script -->
+<script src="https://effectivecpmnetwork.com"></script>
 
 </body>
 </html>
